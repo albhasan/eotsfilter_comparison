@@ -1,10 +1,7 @@
-R implementation of some filters and smoothings used in Earth Observation time series
--------------------------------------------------------------------------------------
-
-``` r
 ################################################################################
 # preliminars
 ################################################################################
+# install required packages
 # install.packages(c("devtools", "knitr", "ptw", "tidyr", "dplyr", "optimx"))
 # library(devtools)
 # install_github("luizassis/wtss.R")
@@ -16,7 +13,10 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 library(optimx)
-library(KFAS)
+
+# colors for the color blinded
+cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73",
+               "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 ################################################################################
 # get data from WTSS
 ################################################################################
@@ -39,23 +39,12 @@ data.zoo <- ts[[1]][[2]]
 data.df <- as.data.frame(coredata(data.zoo), stringsAsFactors = FALSE)
 data.df["date"] <- index(data.zoo)
 data.df[, veg_index] <- data.df[, veg_index]/10000
-```
-
-Whitaker filter
-===============
-
-### Weighted Whittaker smoothing with a first order finite difference penalty
-
-``` r
 ################################################################################
-# Whitaker filter
+# whitaker
 ################################################################################
 lambda.vec <- c(1e0, 1e1, 1e2, 1e3)                                             # whitaker's lambdas
 plot.df <- data.frame()                                                         # data to plot
 data.wt1.df <- data.wt2.df <- data.df[, c("date", "reliability", "quality", "evi")]  # re-order columns
-```
-
-``` r
 #-----------------------------------
 # plot first order whitaker
 #-----------------------------------
@@ -73,14 +62,8 @@ ggplot(plot.df, aes(date, value, group = smoothing, color = smoothing)) +
   geom_line() +
   labs(
     title = paste(toupper(veg_index), " using Weighted Whittaker smoothing", sep = " "),
-    subtitle="First order finite difference penalty")
-```
-
-![](README_files/figure-markdown_github/whitaker1-1.png)
-
-### Weighted Whittaker smoothing with a second order finite difference penalty
-
-``` r
+    subtitle="First order finite difference penalty") +
+  scale_colour_manual(values=cbPalette)
 #-----------------------------------
 # plot second order whitaker
 #-----------------------------------
@@ -98,19 +81,12 @@ ggplot(plot.df, aes(date, value, group = smoothing, color = smoothing)) +
   geom_line() +
   labs(
     title = paste(toupper(veg_index), " using Weighted Whittaker smoothing", sep = " "),
-    subtitle = "Second order finite difference penalty")
-```
-
-![](README_files/figure-markdown_github/whitaker2-1.png)
-
-Filter using the Fourier transformation
-=======================================
-
-``` r
+    subtitle = "Second order finite difference penalty") #+
+  scale_colour_manual(values=cbPalette)
 ################################################################################
 # Apply the Fourier transformation as a filter to the time-series
 ################################################################################
-source("fourier.R")
+source("/home/alber/Documents/Dropbox/alberLocal/inpe/projects/tsFiltering/fourier.R")
 #-----------------------------------
 # FFT parameters
 #-----------------------------------
@@ -159,19 +135,12 @@ ggplot(plot.df, aes(x = x, y = obs, color = type)) +
   labs(
     title = paste(toupper(veg_index), " using Fourier filtering", sep = " "),
     subtitle="Keeping a ratio of the lower frequencies"
-  )
-```
-
-![](README_files/figure-markdown_github/fourier-1.png)
-
-Filter using a double logistic function
-=======================================
-
-``` r
+  ) +
+  scale_colour_manual(values=cbPalette)
 ################################################################################
 # double logistic
 ################################################################################
-source("doublelogistic.R")
+source("/home/alber/Documents/Dropbox/alberLocal/inpe/projects/tsFiltering/doublelogistic.R")
 #-----------------------------------
 # add the Day Of the Year as a column
 #-----------------------------------
@@ -219,18 +188,12 @@ ggplot(plot.df, aes(x = date, y = val, group = type, color = type)) +
   labs(
     title = paste("Double logistic function", sep = " "),
     subtitle="Adjusted using Day-Of-Year 0:365"
-  )
-```
-
-![](README_files/figure-markdown_github/dlog-1.png)
-
-Filter using a structural model
-===============================
-
-``` r
+  ) +
+  scale_colour_manual(values=cbPalette)
 ################################################################################
 # KFAS - structural model
 ################################################################################
+library(KFAS)
 fit <- StructTS(data.df[, veg_index], type = "level")
 plot.df <- rbind(
   data.frame(date = data.df$date, val = data.df[, veg_index], type = veg_index),
@@ -241,7 +204,13 @@ ggplot(plot.df, aes(x = date, y = val, group = type, color = type)) +
   labs(
     title = paste("Fitted structural model", sep = " "),
     subtitle="Using maximum likehood"
-  )
-```
+  ) +
+  scale_colour_manual(values=cbPalette)
+################################################################################
+# 
+################################################################################
 
-![](README_files/figure-markdown_github/kfas-1.png)
+
+
+
+

@@ -1,0 +1,12 @@
+---
+title: "A comparison of filters for Earth Observation time series"
+author: "Alber Sánchez."
+output:   
+  md_document:
+    variant: markdown_github
+---
+
+## R implementation of some filters and smoothings used in Earth Observation time series
+
+```{r child = 'eotsfilters.Rmd'}
+```
