@@ -13,7 +13,6 @@ output: html_notebook
 # install.packages(c("devtools", "knitr", "ptw", "tidyr", "dplyr", "optimx"))
 # library(devtools)
 # install_github("luizassis/wtss.R")
-library(wtss.R)
 library(knitr)
 library(ptw)
 library(zoo)
@@ -22,6 +21,7 @@ library(dplyr)
 library(ggplot2)
 library(optimx)
 library(KFAS)
+library(wtss)
 ################################################################################
 # get data from WTSS
 ################################################################################
@@ -31,10 +31,10 @@ longitude <- -59.11781088
 
 chronos <- WTSS("http://www.dpi.inpe.br/tws/wtss")
 coverages <- listCoverages(chronos)
-cv <- describeCoverage(chronos,coverages[2])
+cv <- describeCoverage(chronos, "mod13q1_512")
 ts <- timeSeries(chronos,
                  names(cv),
-                 attributes = c(veg_index, "reliability", "quality"),
+                 attributes = c(veg_index),
                  latitude = latitude,
                  longitude = longitude,
                  start="2000-02-18",
@@ -57,7 +57,7 @@ data.df[, veg_index] <- data.df[, veg_index]/10000
 ################################################################################
 lambda.vec <- c(1e0, 1e1, 1e2, 1e3)                                             # whitaker's lambdas
 plot.df <- data.frame()                                                         # data to plot
-data.wt1.df <- data.wt2.df <- data.df[, c("date", "reliability", "quality", "evi")]  # re-order columns
+data.wt1.df <- data.wt2.df <- data.df[, c("evi")]  # re-order columns
 ```
 
 
@@ -74,8 +74,15 @@ data.df = data.df
 )
 whit1.df <- do.call("cbind", whit1.df)
 colnames(whit1.df) <- paste("whit1_", lambda.vec, sep = "")
-data.wt1.df <- cbind(data.wt1.df, whit1.df)                                     # formated data frame
-plot.df <- gather(data.wt1.df, smoothing, value, evi:whit1_1000)                # plot data.frame
+data.wt1.df <- as.data.frame(cbind(data.wt1.df, whit1.df)) 
+
+# formated data frame
+plot.df <- gather(data = data.wt1.df, key = smoothing, value = value, whit1_1000)                # plot 
+
+
+
+
+
 ggplot(plot.df, aes(date, value, group = smoothing, color = smoothing)) +
   geom_line() +
   labs(
